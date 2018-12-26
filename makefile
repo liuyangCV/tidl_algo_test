@@ -85,9 +85,9 @@ ifeq ($(CORE) , eve)
 CFILES += $(DSP_COMMON_DIR)/eve/eve_profile.c
 CFILES += $(DSP_COMMON_DIR)/eve/curve_fitting.c
 CFILES += $(DSP_COMMON_DIR)/eve/eve_sctm.c
-CFILES += $(DSP_COMMON_DIR)/eve/ti_stats_collector.c 
+CFILES += $(DSP_COMMON_DIR)/eve/ti_stats_collector.c
 CFILES += $(DSP_COMMON_DIR)/eve/cred.c
-CFILES += $(DSP_COMMON_DIR)/eve/boot_arp32.asm 
+CFILES += $(DSP_COMMON_DIR)/eve/boot_arp32.asm
 CFLAGS+= -I $(DSP_COMMON_DIR)/eve
 else ifeq ($(CORE) , dsp)
 CFILES += $(DSP_COMMON_DIR)/cache.c
@@ -102,7 +102,8 @@ endif
 
 HFILES = $(foreach dir,$(SUBDIRS),$(wildcard $(dir)/*.h))
 
-OUTFILE=./out/$(CORE)_test_dl_algo.out
+OUTFILE=./out/$(CORE)_ModelTest_dl_algo.out
+
 ##############################################################
 
 
@@ -146,7 +147,7 @@ ifneq ($(TARGET_PLATFORM) , PC)
 ifeq ($(CORE) , eve)
 LDFLAGS+= -l $(ARP32_TOOLS)/lib/rtsarp32_v200.lib
 LDFLAGS+= -l "./linker_$(CORE)_$(TARGET_BUILD).cmd"
-else ifeq ($(CORE) , dsp)  
+else ifeq ($(CORE) , dsp)
 LDFLAGS+= -cr -x
 LDFLAGS+= -l $(DSP_TOOLS)/lib/rts6600_elf.lib
 LDFLAGS+= -l "./linker_$(CORE).cmd"
@@ -225,4 +226,3 @@ OUTDIR =  "./out"
 
 $(OUTFILE) : outfile
 ##############################################################
-

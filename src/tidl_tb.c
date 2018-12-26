@@ -90,15 +90,17 @@
 #endif
 
 #if (CORE_EVE) && (!VCOP_HOST_EMULATION)
-#include "eve_profile.h"   
+#include "eve_profile.h"
 #endif
 
 #define TIDL_BLOCK_WIDTH			(32U)
 #define TIDL_BLOCK_HEIGHT			(32U)
 
+#define DEBUG_FLG
+
 #if (CORE_DSP) && (!HOST_EMULATION)
-  
-void _TSC_enable();  
+
+void _TSC_enable();
 long long _TSC_read();
 uint64_t tsc_start, tsc_cycles;
 
@@ -119,7 +121,7 @@ void SetMAR()
   {
     MAR[i] = 0x0;
   }
-  
+
   /* MAR Reg  Add         Cache able Region
   * MAR 144 (0x01848240h) 9000 0000h - 90FF FFFFh
   * MAR 160 (0x01848280)  A000 0000h - A0FF FFFFh
@@ -131,7 +133,7 @@ void SetMAR()
 
 
   return ;
-} 
+}
 
 void InitCache()
 {
@@ -179,7 +181,7 @@ void InitCache()
 #define TIDL_TB_CURR_LAYERS_GROUP_ID (1)
 #define DUMP_WITH_PADING (0)
 #define SAT_LO_UINT8 (0)
-#define SAT_HI_UINT8 (255)  
+#define SAT_HI_UINT8 (255)
 #define SAT_LO_INT8  (-128)
 #define SAT_HI_INT8  (127)
 
@@ -201,7 +203,7 @@ TIDL_CreateParams  createParams;
 
 //#pragma DATA_SECTION (DMEM_SCRATCH, ".dmemSect");
 //uint8_t DMEM_SCRATCH[DMEM_SIZE];
-const char * TIDL_LayerString[] = 
+const char * TIDL_LayerString[] =
 {
 "TIDL_DataLayer           ",
 "TIDL_ConvolutionLayer    ",
@@ -251,12 +253,12 @@ uint8_t EXTMEMNONCACHEIO[EXTMEMNONCACHEIO_SIZE];
 #pragma DATA_SECTION (tempIOBUF, ".tempiobuf");
 uint8_t tempIOBUF[512*1024*MAX_ROI_SUPPORT];
 
-#define MEM_CONTAMINATION_DIS 
+#define MEM_CONTAMINATION_DIS
 
-int32_t readImage(uint8_t *imageFile, int8_t *ptr, int16_t roi, int16_t n, 
-                  int16_t width, int16_t height, int16_t pitch, 
+int32_t readImage(uint8_t *imageFile, int8_t *ptr, int16_t roi, int16_t n,
+                  int16_t width, int16_t height, int16_t pitch,
                   int32_t chOffset, int32_t frameCount, int32_t preProcType);
-                  
+
 TIMemObject memObj_DMEM0;
 TIMemObject memObj_DMEM1;
 TIMemObject memObj_EXTMEMNONCACHEIO;
@@ -279,7 +281,7 @@ void setDefaultParams(tidl_conv2d_config * params)
   params->randInput              = 0;
   params->writeOutput            = 1;
   params->preProcType            = 0;
-  
+
 }
 
 int32_t TestApp_AllocMemRecords(IALG_MemRec * memRec,int32_t numMemRec)
@@ -294,11 +296,11 @@ int32_t TestApp_AllocMemRecords(IALG_MemRec * memRec,int32_t numMemRec)
   for (i = 0; i < numMemRec; i++)
   {
     if(memRec[i].space == IALG_DARAM0) {
-      memRec[i].base = TI_GetMemoryChunk(memHdl_DMEM0, memRec[i].size, 
+      memRec[i].base = TI_GetMemoryChunk(memHdl_DMEM0, memRec[i].size,
         memRec[i].alignment);
     }
     else if(memRec[i].space == IALG_DARAM1) {
-      memRec[i].base = TI_GetMemoryChunk(memHdl_DMEM1, memRec[i].size, 
+      memRec[i].base = TI_GetMemoryChunk(memHdl_DMEM1, memRec[i].size,
         memRec[i].alignment);
     }
     else {
@@ -309,9 +311,9 @@ int32_t TestApp_AllocMemRecords(IALG_MemRec * memRec,int32_t numMemRec)
       return IALG_EFAIL;
     }
 #ifndef MEM_CONTAMINATION_DIS
-    /*Currently in test application all memory are used as scratch across 
-    process calls */       
-    if(memRec[i].space != IALG_DARAM0){        
+    /*Currently in test application all memory are used as scratch across
+    process calls */
+    if(memRec[i].space != IALG_DARAM0){
       for(j = 0; j < (memRec[i].size >> 2); j++){
         //((int32_t*)memRec[i].base)[j] = 0xDEADBEEF;
       }
@@ -338,7 +340,7 @@ int32_t TestApp_FreeMemRecords(IALG_MemRec * memRec,int32_t numMemRec)
     }
     else if(memRec[i].space == IALG_DARAM1) {
       TI_ResetMemoryHandle(memHdl_DMEM1);
-    }        
+    }
     else {
       free(memRec[i].base);
     }
@@ -393,7 +395,7 @@ char* tidl_itoa(int32_t num, char* str, int32_t base)
     return str;
   }
 
-  // In standard itoa(), negative numbers are handled only with 
+  // In standard itoa(), negative numbers are handled only with
   // base 10. Otherwise numbers are considered unsigned.
   if (num < 0 && base == 10)
   {
@@ -421,7 +423,7 @@ char* tidl_itoa(int32_t num, char* str, int32_t base)
   return str;
 }
 
-static void createRandPatternS16(int16_t *ptr, int16_t n, int16_t width, 
+static void createRandPatternS16(int16_t *ptr, int16_t n, int16_t width,
                                  int16_t height, int16_t pitch, int32_t chOffset)
 {
   short val;
@@ -439,8 +441,8 @@ static void createRandPatternS16(int16_t *ptr, int16_t n, int16_t width,
   }
 }
 
-static void createRandPatternS8(int8_t *ptr, int16_t roi, int16_t n, 
-                                int16_t width, int16_t height, int16_t pitch, 
+static void createRandPatternS8(int8_t *ptr, int16_t roi, int16_t n,
+                                int16_t width, int16_t height, int16_t pitch,
                                 int32_t chOffset)
 {
   int16_t val;
@@ -454,7 +456,7 @@ static void createRandPatternS8(int8_t *ptr, int16_t roi, int16_t n,
         for(i2 = 0; i2 < width; i2++)
         {
           val = rand() & 0x7F;
-          ptr[i3*n*chOffset + i0*chOffset + i1*pitch +i2] = 
+          ptr[i3*n*chOffset + i0*chOffset + i1*pitch +i2] =
             (rand()&1) ? val : -val;
         }
       }
@@ -462,8 +464,8 @@ static void createRandPatternS8(int8_t *ptr, int16_t roi, int16_t n,
   }
 }
 
-static void createRandPatternU8(uint8_t *ptr, int16_t roi, int16_t n, 
-                                int16_t width, int16_t height, int16_t pitch, 
+static void createRandPatternU8(uint8_t *ptr, int16_t roi, int16_t n,
+                                int16_t width, int16_t height, int16_t pitch,
                                 int32_t chOffset)
 {
   uint16_t val;
@@ -477,7 +479,7 @@ static void createRandPatternU8(uint8_t *ptr, int16_t roi, int16_t n,
         for(i2 = 0; i2 < width; i2++)
         {
           val = rand() & 0xFF;
-          ptr[i3*n*chOffset + i0*chOffset + i1*pitch +i2] = 
+          ptr[i3*n*chOffset + i0*chOffset + i1*pitch +i2] =
             (rand()&1) ? val : -val;
         }
       }
@@ -496,12 +498,15 @@ static int32_t writeDataS8(TI_FILE *fptr, int8_t *ptr, int16_t n, int16_t width,
     {
       for(i1 = 0; i1 < height; i1++)
       {
-        memcpy(&writePtr[i0*width*height+ i1*width], 
+        memcpy(&writePtr[i0*width*height+ i1*width],
                &ptr[i0*chOffset + i1*pitch],width);
+        // printf("checkpoint at chn %d, line %d of %d\n",i0,i1,n);
       }
     }
+    printf("checkpoint x\n");
     FWRITE(writePtr,1,width*height*n, fptr);
     free(writePtr);
+    printf("checkpoint o\n");
     return 1;
   }
   else
@@ -511,8 +516,8 @@ static int32_t writeDataS8(TI_FILE *fptr, int8_t *ptr, int16_t n, int16_t width,
 }
 
 
-static int32_t readDataS8(TI_FILE *fptr, int8_t *ptr, int16_t roi, int16_t n, 
-                          int16_t width, int16_t height, int16_t pitch, 
+static int32_t readDataS8(TI_FILE *fptr, int8_t *ptr, int16_t roi, int16_t n,
+                          int16_t width, int16_t height, int16_t pitch,
                           int32_t chOffset)
 {
   int32_t   i0, i1, i2, i3;
@@ -650,66 +655,66 @@ int32_t tidl_allocNetParamsMem(sTIDL_Network_t * net)
   int32_t i;
   for(i = 0; i < net->numLayers; i++)
   {
-    if((net->TIDLLayers[i].layerType == TIDL_ConvolutionLayer) || 
+    if((net->TIDLLayers[i].layerType == TIDL_ConvolutionLayer) ||
        (net->TIDLLayers[i].layerType   == TIDL_Deconv2DLayer))
     {
       sTIDL_ConvParams_t *conv2dPrms =&net->TIDLLayers[i].layerParams.convParams;
       conv2dPrms->weights.bufSize =  net->weightsElementSize *
-            (conv2dPrms->kernelW * conv2dPrms->kernelH * 
+            (conv2dPrms->kernelW * conv2dPrms->kernelH *
              conv2dPrms->numInChannels * conv2dPrms->numOutChannels)
              /conv2dPrms->numGroups;
-             
-      conv2dPrms->weights.ptr = 
-                (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO, 
+
+      conv2dPrms->weights.ptr =
+                (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO,
                 conv2dPrms->weights.bufSize, 4);
 
       conv2dPrms->bias.bufSize= net->biasElementSize*conv2dPrms->numOutChannels;
-      conv2dPrms->bias.ptr= (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO, 
+      conv2dPrms->bias.ptr= (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO,
                                                     conv2dPrms->bias.bufSize,4);
     }
     else if(net->TIDLLayers[i].layerType   == TIDL_BiasLayer)
     {
       sTIDL_BiasParams_t *biasPrms =&net->TIDLLayers[i].layerParams.biasParams;
       biasPrms->bias.bufSize =  net->biasElementSize * biasPrms->numChannels;
-      biasPrms->bias.ptr = (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO, 
+      biasPrms->bias.ptr = (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO,
                                                      biasPrms->bias.bufSize, 4);
     }
     else if(net->TIDLLayers[i].layerType   == TIDL_BatchNormLayer)
     {
-      sTIDL_BatchNormParams_t *batchNormPrms = 
+      sTIDL_BatchNormParams_t *batchNormPrms =
                  &net->TIDLLayers[i].layerParams.batchNormParams;
-      batchNormPrms->weights.bufSize =  
-                 net->weightsElementSize * batchNormPrms->numChannels;       
-      batchNormPrms->weights.ptr = 
-                (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO, 
+      batchNormPrms->weights.bufSize =
+                 net->weightsElementSize * batchNormPrms->numChannels;
+      batchNormPrms->weights.ptr =
+                (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO,
                 batchNormPrms->weights.bufSize, 4);
-      batchNormPrms->bias.bufSize =  
+      batchNormPrms->bias.bufSize =
                 net->biasElementSize * batchNormPrms->numChannels;
-      batchNormPrms->bias.ptr = 
-                (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO, 
+      batchNormPrms->bias.ptr =
+                (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO,
                 batchNormPrms->bias.bufSize, 4);
-      batchNormPrms->reluParams.slope.bufSize =  
-                 net->slopeElementSize * batchNormPrms->numChannels;   
+      batchNormPrms->reluParams.slope.bufSize =
+                 net->slopeElementSize * batchNormPrms->numChannels;
       if(batchNormPrms->reluParams.reluType == TIDL_PRelU)
       {
 
-        batchNormPrms->reluParams.slope.ptr = 
-          (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO, 
+        batchNormPrms->reluParams.slope.ptr =
+          (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO,
           batchNormPrms->reluParams.slope.bufSize, 4);
       }
-    }    
+    }
     else if(net->TIDLLayers[i].layerType   == TIDL_InnerProductLayer)
     {
-      sTIDL_InnerProductParams_t *ipPrms = 
-                            &net->TIDLLayers[i].layerParams.innerProductParams;      
+      sTIDL_InnerProductParams_t *ipPrms =
+                            &net->TIDLLayers[i].layerParams.innerProductParams;
       ipPrms->bias.bufSize =  net->biasElementSize * ipPrms->numOutNodes;
-      ipPrms->bias.ptr = (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO, 
+      ipPrms->bias.ptr = (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO,
                                         ALIGN_SIZE(ipPrms->bias.bufSize,128),4);
-      ipPrms->weights.bufSize =  net->weightsElementSize* ipPrms->numInNodes * 
+      ipPrms->weights.bufSize =  net->weightsElementSize* ipPrms->numInNodes *
                                  ipPrms->numOutNodes; //ipPrms->numChannels;
-      ipPrms->weights.ptr = (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO, 
+      ipPrms->weights.ptr = (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO,
                                      ALIGN_SIZE((ipPrms->weights.bufSize + 16*net->TIDLLayers[i].layerParams.innerProductParams.numInNodes), 1024),4);
-    }     
+    }
   }
   return 0;
 }
@@ -720,7 +725,7 @@ sTIDL_DataParams_t *tidl_getDataBufDims(sTIDL_Network_t *net, int32_t dataBuffId
   for (i = 0 ; i < net->numLayers; i++)
   {
     for (j = 0; j < net->TIDLLayers[i].numOutBufs; j++)
-    {       
+    {
       if( (net->TIDLLayers[i].outData[j].dataId == dataBuffId))
       {
 
@@ -778,22 +783,22 @@ int32_t tidl_writeTraceDataBuf(int8_t * ptr, sTIDL_Network_t * net, int32_t data
     {
       for(i = 0; i < dataBuffParam->dimValues[2]; i++)
       {
-#if 1        
+#if 1
         memcpy((outPtr+j*dataBuffParam->dimValues[2]*dataBuffParam->dimValues[3]+
-                i*dataBuffParam->dimValues[3]), 
-                (ptr+j*chPitch+i*linePitch + TIDL_MAX_PAD_SIZE*linePitch + 
+                i*dataBuffParam->dimValues[3]),
+                (ptr+j*chPitch+i*linePitch + TIDL_MAX_PAD_SIZE*linePitch +
                 TIDL_MAX_PAD_SIZE),
                 dataBuffParam->dimValues[3]);
-#else                
+#else
         int8_t * src, * dst;
         int32_t k;
         src =  (ptr+j*chPitch+i*linePitch + TIDL_MAX_PAD_SIZE*linePitch + TIDL_MAX_PAD_SIZE);
-        dst =  (outPtr+j*dataBuffParam->dimValues[2]*dataBuffParam->dimValues[3]+ i*dataBuffParam->dimValues[3]);        
+        dst =  (outPtr+j*dataBuffParam->dimValues[2]*dataBuffParam->dimValues[3]+ i*dataBuffParam->dimValues[3]);
         for(k = 0; k < dataBuffParam->dimValues[3]; k++)
         {
           dst[k] = src[k] + 128;
         }
-#endif        
+#endif
       }
     }
 
@@ -847,7 +852,7 @@ int32_t tidl_writeLayerMinMax(sTIDL_Network_t * net)
       {
         FWRITE(&TIDLLayer->outData[j].minValue,1,sizeof(int32_t), fptr);
         FWRITE(&TIDLLayer->outData[j].maxValue,1,sizeof(int32_t), fptr);
-      }    
+      }
     }
   }
   FCLOSE(fptr);
@@ -859,7 +864,7 @@ int32_t tidl_freeNetParamsMem(sTIDL_Network_t * net)
   int32_t i;
   for(i = 0; i < net->numLayers; i++)
   {
-    if((net->TIDLLayers[i].layerType   == TIDL_ConvolutionLayer) || 
+    if((net->TIDLLayers[i].layerType   == TIDL_ConvolutionLayer) ||
        (net->TIDLLayers[i].layerType   == TIDL_Deconv2DLayer))
     {
       free(net->TIDLLayers[i].layerParams.convParams.weights.ptr);
@@ -881,24 +886,24 @@ int32_t tidl_fillNetParamsMem(sTIDL_Network_t *net, tidl_conv2d_config *params)
 
   for(i = 0; i < net->numLayers; i++)
   {
-    if((net->TIDLLayers[i].layerType   == TIDL_ConvolutionLayer) || 
+    if((net->TIDLLayers[i].layerType   == TIDL_ConvolutionLayer) ||
        (net->TIDLLayers[i].layerType   == TIDL_Deconv2DLayer))
     {
       sTIDL_ConvParams_t *conv2dPrms =&net->TIDLLayers[i].layerParams.convParams;
 #if 1
       if(params->randInput)
       {
-        createRandPatternS8((int8_t *)conv2dPrms->weights.ptr, 1, 
-          conv2dPrms->numInChannels/conv2dPrms->numGroups, 
-          conv2dPrms->numOutChannels, 
-          conv2dPrms->kernelW*conv2dPrms->kernelH, 
-          conv2dPrms->numOutChannels, 
+        createRandPatternS8((int8_t *)conv2dPrms->weights.ptr, 1,
+          conv2dPrms->numInChannels/conv2dPrms->numGroups,
+          conv2dPrms->numOutChannels,
+          conv2dPrms->kernelW*conv2dPrms->kernelH,
+          conv2dPrms->numOutChannels,
           conv2dPrms->kernelW*conv2dPrms->kernelW*conv2dPrms->numOutChannels);
-          
+
         if(params->noZeroCoeffsPercentage < 100)
         {
-          sparseConv2dCoffesS8((int8_t *)conv2dPrms->weights.ptr, 
-                               conv2dPrms->weights.bufSize, 
+          sparseConv2dCoffesS8((int8_t *)conv2dPrms->weights.ptr,
+                               conv2dPrms->weights.bufSize,
                                params->noZeroCoeffsPercentage*2.55, conv2dPrms->zeroWeightValue);
         }
         if(net->TIDLLayers[i].layerParams.convParams.enableBias)
@@ -914,7 +919,7 @@ int32_t tidl_fillNetParamsMem(sTIDL_Network_t *net, tidl_conv2d_config *params)
       else
 #endif
       {
-        dataSize = (conv2dPrms->numInChannels* conv2dPrms->numOutChannels* 
+        dataSize = (conv2dPrms->numInChannels* conv2dPrms->numOutChannels*
                 conv2dPrms->kernelW*conv2dPrms->kernelH)/conv2dPrms->numGroups;
 
         //Read weights based on its size
@@ -922,17 +927,17 @@ int32_t tidl_fillNetParamsMem(sTIDL_Network_t *net, tidl_conv2d_config *params)
           FREAD((int8_t *)conv2dPrms->weights.ptr,1,2*dataSize, fp1);
         else
           FREAD((int8_t *)conv2dPrms->weights.ptr,1,dataSize, fp1);
-          
+
         if(params->noZeroCoeffsPercentage < 100)
         {
           if(net->weightsElementSize == 2)
           {
-            sparseConv2dCoffesS16((int16_t *)conv2dPrms->weights.ptr, 
+            sparseConv2dCoffesS16((int16_t *)conv2dPrms->weights.ptr,
               conv2dPrms->weights.bufSize, params->noZeroCoeffsPercentage*2.55,conv2dPrms->zeroWeightValue);
           }
           else
           {
-            sparseConv2dCoffesS8((int8_t *)conv2dPrms->weights.ptr, 
+            sparseConv2dCoffesS8((int8_t *)conv2dPrms->weights.ptr,
               conv2dPrms->weights.bufSize, params->noZeroCoeffsPercentage*2.55,conv2dPrms->zeroWeightValue);
           }
         }
@@ -951,7 +956,7 @@ int32_t tidl_fillNetParamsMem(sTIDL_Network_t *net, tidl_conv2d_config *params)
     else if(net->TIDLLayers[i].layerType == TIDL_BiasLayer)
     {
       sTIDL_BiasParams_t *biasPrms =&net->TIDLLayers[i].layerParams.biasParams;
-      dataSize = biasPrms->numChannels;      
+      dataSize = biasPrms->numChannels;
       if(params->randInput)
       {
         createRandPatternS16((int16_t *)biasPrms->bias.ptr, 1,dataSize,1,1, 1);
@@ -960,11 +965,11 @@ int32_t tidl_fillNetParamsMem(sTIDL_Network_t *net, tidl_conv2d_config *params)
       {
         FREAD((int8_t *)biasPrms->bias.ptr,1,dataSize*2, fp1);
       }
-    } 
+    }
     else if(net->TIDLLayers[i].layerType == TIDL_BatchNormLayer)
     {
       sTIDL_BatchNormParams_t *bNPrms =&net->TIDLLayers[i].layerParams.batchNormParams;
-      dataSize = bNPrms->numChannels;  
+      dataSize = bNPrms->numChannels;
       if(params->randInput)
       {
         createRandPatternS16((int16_t *)bNPrms->weights.ptr, 1, dataSize, 1,1,1);
@@ -1006,12 +1011,12 @@ int32_t tidl_fillNetParamsMem(sTIDL_Network_t *net, tidl_conv2d_config *params)
 		  }
         }
       }
-    }    
+    }
     else if(net->TIDLLayers[i].layerType == TIDL_InnerProductLayer)
     {
-      sTIDL_InnerProductParams_t *ipPrms = 
-                             &net->TIDLLayers[i].layerParams.innerProductParams;      
-      dataSize = ipPrms->numInNodes * ipPrms->numOutNodes;      
+      sTIDL_InnerProductParams_t *ipPrms =
+                             &net->TIDLLayers[i].layerParams.innerProductParams;
+      dataSize = ipPrms->numInNodes * ipPrms->numOutNodes;
       if(params->randInput)
       {
         createRandPatternS16((int16_t *)ipPrms->weights.ptr, 1, dataSize, 1,1,1);
@@ -1023,8 +1028,8 @@ int32_t tidl_fillNetParamsMem(sTIDL_Network_t *net, tidl_conv2d_config *params)
 		  FREAD((int8_t *)ipPrms->weights.ptr,1,2*dataSize, fp1);
 		else
           FREAD((int8_t *)ipPrms->weights.ptr,1,dataSize, fp1);
-      }      
-      dataSize = ipPrms->numOutNodes;      
+      }
+      dataSize = ipPrms->numOutNodes;
       if(params->randInput)
       {
         createRandPatternS16((int16_t *)ipPrms->bias.ptr, 1, dataSize, 1, 1, 1);
@@ -1033,7 +1038,7 @@ int32_t tidl_fillNetParamsMem(sTIDL_Network_t *net, tidl_conv2d_config *params)
       {
         FREAD((int8_t *)ipPrms->bias.ptr,1,dataSize*2, fp1);
       }
-    }     
+    }
   }
   return 0;
 }
@@ -1046,8 +1051,8 @@ int32_t tidltb_isOutDataBuff(sTIDL_Network_t *pTIDLNetStructure, int32_t dataId,
   for (i = 0 ; i < pTIDLNetStructure->numLayers; i++)
   {
     for (j = 0; j < pTIDLNetStructure->TIDLLayers[i].numInBufs; j++)
-    {       
-      if((pTIDLNetStructure->TIDLLayers[i].layersGroupId != layersGroupId) && 
+    {
+      if((pTIDLNetStructure->TIDLLayers[i].layersGroupId != layersGroupId) &&
          (pTIDLNetStructure->TIDLLayers[i].inData[j].dataId == dataId))
       {
         return 1;
@@ -1057,15 +1062,15 @@ int32_t tidltb_isOutDataBuff(sTIDL_Network_t *pTIDLNetStructure, int32_t dataId,
   return 0;
 }
 
-int32_t tidltb_isInDataBuff(sTIDL_Network_t * pTIDLNetStructure, int32_t dataId, 
+int32_t tidltb_isInDataBuff(sTIDL_Network_t * pTIDLNetStructure, int32_t dataId,
                             int32_t layersGroupId)
 {
   int32_t i,j;
   for (i = 0 ; i < pTIDLNetStructure->numLayers; i++)
   {
     for (j = 0; j < pTIDLNetStructure->TIDLLayers[i].numInBufs; j++)
-    {       
-      if((pTIDLNetStructure->TIDLLayers[i].layersGroupId == layersGroupId) && 
+    {
+      if((pTIDLNetStructure->TIDLLayers[i].layersGroupId == layersGroupId) &&
          (pTIDLNetStructure->TIDLLayers[i].inData[j].dataId == dataId))
       {
         return 1;
@@ -1095,33 +1100,33 @@ int32_t tidl_AllocNetInputMem(sTIDL_Network_t * net, tidl_conv2d_config *params,
           BufDescList[numBuffs].bufPlanes[0].frameROI.topLeft.x    = 0;
           BufDescList[numBuffs].bufPlanes[0].frameROI.topLeft.y    = 0;
 
-          BufDescList[numBuffs].bufPlanes[0].width                 = 
+          BufDescList[numBuffs].bufPlanes[0].width                 =
                     net->TIDLLayers[i].outData[j].dimValues[3] + 2*tidlMaxPad;
-                    
+
           BufDescList[numBuffs].bufPlanes[0].height                =
                     net->TIDLLayers[i].outData[j].dimValues[0]*
                     net->TIDLLayers[i].outData[j].dimValues[1]*
                     (net->TIDLLayers[i].outData[j].dimValues[2] + 2*tidlMaxPad);
-                    
-          BufDescList[numBuffs].bufPlanes[0].frameROI.width        = 
+
+          BufDescList[numBuffs].bufPlanes[0].frameROI.width        =
                     net->TIDLLayers[i].outData[j].dimValues[3];
-                    
-          BufDescList[numBuffs].bufPlanes[0].frameROI.height       = 
+
+          BufDescList[numBuffs].bufPlanes[0].frameROI.height       =
                     net->TIDLLayers[i].outData[j].dimValues[2];
 
-          BufDescList[numBuffs].bufPlanes[0].buf = 
-                      (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO, 
-                      BufDescList[numBuffs].bufPlanes[0].width * 
+          BufDescList[numBuffs].bufPlanes[0].buf =
+                      (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO,
+                      BufDescList[numBuffs].bufPlanes[0].width *
                       BufDescList[numBuffs].bufPlanes[0].height, 4);
-          BufDescList[numBuffs].reserved[0]     = 
+          BufDescList[numBuffs].reserved[0]     =
                                         net->TIDLLayers[i].outData[j].dataId;
-          
-          memset(BufDescList[numBuffs].bufPlanes[0].buf,0, 
+
+          memset(BufDescList[numBuffs].bufPlanes[0].buf,0,
                   BufDescList[numBuffs].bufPlanes[0].width*
                   BufDescList[numBuffs].bufPlanes[0].height);
           BufDescList[numBuffs].bufferId = net->TIDLLayers[i].outData[j].dataId;
 
-              
+
           numBuffs++;
         }
       }
@@ -1134,7 +1139,7 @@ TI_FILE * tidl_openNetInput(tidl_conv2d_config *params)
 {
   TI_FILE * fp1;
   if(params->randInput)
-  {    
+  {
     if(params->writeInput)
     {
       fp1 = FOPEN((const char *)params->inData, "wb+");
@@ -1147,12 +1152,13 @@ TI_FILE * tidl_openNetInput(tidl_conv2d_config *params)
   else
   {
     fp1 = FOPEN((const char *)params->inData, "rb+");
+    // printf("Opening file %s\n",params->inData);printf("Debug Halt!\n");return 0;
     if(fp1 == NULL)
     {
       printf("Could not open %s file for reading \n",params->inData);
     }
   }
-  return fp1;  
+  return fp1;
 }
 
 
@@ -1178,7 +1184,7 @@ int32_t tidl_ReadNetInput(TI_FILE * fp1, sTIDL_Network_t * net, tidl_conv2d_conf
             if(inElementType == TIDL_SignedChar)
             {
               createRandPatternS8(
-                        ((int8_t *)BufDescList[numBuffs].bufPlanes[0].buf + 
+                        ((int8_t *)BufDescList[numBuffs].bufPlanes[0].buf +
                         BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad +
                         tidlMaxPad),net->TIDLLayers[i].outData[j].dimValues[0],
                         net->TIDLLayers[i].outData[j].dimValues[1],
@@ -1187,25 +1193,25 @@ int32_t tidl_ReadNetInput(TI_FILE * fp1, sTIDL_Network_t * net, tidl_conv2d_conf
                         BufDescList[numBuffs].bufPlanes[0].width,
                         BufDescList[numBuffs].bufPlanes[0].width*
                    (net->TIDLLayers[i].outData[j].dimValues[2] + 2*tidlMaxPad));
-                   
+
               if(params->writeInput)
               {
                 writeDataS8(fp1,
-                      ((int8_t *)BufDescList[numBuffs].bufPlanes[0].buf + 
-                      BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad + 
-                      tidlMaxPad), net->TIDLLayers[i].outData[j].dimValues[1], 
-                      net->TIDLLayers[i].outData[j].dimValues[3], 
-                      net->TIDLLayers[i].outData[j].dimValues[2], 
-                      BufDescList[numBuffs].bufPlanes[0].width, 
+                      ((int8_t *)BufDescList[numBuffs].bufPlanes[0].buf +
+                      BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad +
+                      tidlMaxPad), net->TIDLLayers[i].outData[j].dimValues[1],
+                      net->TIDLLayers[i].outData[j].dimValues[3],
+                      net->TIDLLayers[i].outData[j].dimValues[2],
+                      BufDescList[numBuffs].bufPlanes[0].width,
                       BufDescList[numBuffs].bufPlanes[0].width*
                    (net->TIDLLayers[i].outData[j].dimValues[2] + 2*tidlMaxPad));
-              }                          
+              }
             }
             else if(inElementType == TIDL_UnsignedChar)
             {
               createRandPatternU8(
-                  ((uint8_t *)BufDescList[numBuffs].bufPlanes[0].buf + 
-                  BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad + 
+                  ((uint8_t *)BufDescList[numBuffs].bufPlanes[0].buf +
+                  BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad +
                   tidlMaxPad),net->TIDLLayers[i].outData[j].dimValues[0],
                   net->TIDLLayers[i].outData[j].dimValues[1],
                   net->TIDLLayers[i].outData[j].dimValues[3],
@@ -1213,49 +1219,62 @@ int32_t tidl_ReadNetInput(TI_FILE * fp1, sTIDL_Network_t * net, tidl_conv2d_conf
                   BufDescList[numBuffs].bufPlanes[0].width,
                   BufDescList[numBuffs].bufPlanes[0].width*
                   (net->TIDLLayers[i].outData[j].dimValues[2] + 2*tidlMaxPad));
-                  
+
               if(params->writeInput)
               {
                 writeDataS8(fp1,
-                  ((int8_t *)BufDescList[numBuffs].bufPlanes[0].buf + 
-                  BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad + 
-                  tidlMaxPad),net->TIDLLayers[i].outData[j].dimValues[1], 
+                  ((int8_t *)BufDescList[numBuffs].bufPlanes[0].buf +
+                  BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad +
+                  tidlMaxPad),net->TIDLLayers[i].outData[j].dimValues[1],
                   net->TIDLLayers[i].outData[j].dimValues[3],
                   net->TIDLLayers[i].outData[j].dimValues[2],
                   BufDescList[numBuffs].bufPlanes[0].width,
                   BufDescList[numBuffs].bufPlanes[0].width*
                   (net->TIDLLayers[i].outData[j].dimValues[2] + 2*tidlMaxPad));
-              }                          
+              }
             }
           }
           else
           {
             if(params->rawImage == 1)
             {
+            #ifdef DEBUG_FLG
+            printf("[Debug Echo::test_tidl_ivison->tidl_ReadNetInput]Calling readDataS8(i=%d of %d,j=%d of %d)\n",
+                  i,net->numLayers,j,net->TIDLLayers[i].numOutBufs);
+            printf("readDataS8(fp1,buf+%d*%d+%d,roi=%d,n=%d,width=%d,height=%d,pitch=%d,chOffset=%d*(%d+2*%d))\n",
+                    BufDescList[numBuffs].bufPlanes[0].width,tidlMaxPad,tidlMaxPad,
+                    net->TIDLLayers[i].outData[j].dimValues[0],
+                    net->TIDLLayers[i].outData[j].dimValues[1],
+                    net->TIDLLayers[i].outData[j].dimValues[3],
+                    net->TIDLLayers[i].outData[j].dimValues[2],
+                    BufDescList[numBuffs].bufPlanes[0].width,
+                    BufDescList[numBuffs].bufPlanes[0].width,
+                    net->TIDLLayers[i].outData[j].dimValues[2],tidlMaxPad);
+            #endif
             readDataS8(fp1,((int8_t *)BufDescList[numBuffs].bufPlanes[0].buf +
-                      BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad + 
-                      tidlMaxPad), net->TIDLLayers[i].outData[j].dimValues[0],
-                      net->TIDLLayers[i].outData[j].dimValues[1],    
-                      net->TIDLLayers[i].outData[j].dimValues[3],
-                      net->TIDLLayers[i].outData[j].dimValues[2], 
-                      BufDescList[numBuffs].bufPlanes[0].width, 
-                      BufDescList[numBuffs].bufPlanes[0].width* 
-                  (net->TIDLLayers[i].outData[j].dimValues[2] + 2*tidlMaxPad));
+                      BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad +
+                      tidlMaxPad), net->TIDLLayers[i].outData[j].dimValues[0],//roi
+                      net->TIDLLayers[i].outData[j].dimValues[1],//n
+                      net->TIDLLayers[i].outData[j].dimValues[3],//Width
+                      net->TIDLLayers[i].outData[j].dimValues[2],//Height
+                      BufDescList[numBuffs].bufPlanes[0].width,//pitch
+                      BufDescList[numBuffs].bufPlanes[0].width*
+                  (net->TIDLLayers[i].outData[j].dimValues[2] + 2*tidlMaxPad));//chOffset
             }
             else
             {
             readImage(params->inData,((int8_t *)BufDescList[numBuffs].bufPlanes[0].buf +
-                      BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad + 
+                      BufDescList[numBuffs].bufPlanes[0].width*tidlMaxPad +
                       tidlMaxPad), net->TIDLLayers[i].outData[j].dimValues[0],
-                      net->TIDLLayers[i].outData[j].dimValues[1],    
+                      net->TIDLLayers[i].outData[j].dimValues[1],
                       net->TIDLLayers[i].outData[j].dimValues[3],
-                      net->TIDLLayers[i].outData[j].dimValues[2], 
-                      BufDescList[numBuffs].bufPlanes[0].width, 
-                      BufDescList[numBuffs].bufPlanes[0].width* 
+                      net->TIDLLayers[i].outData[j].dimValues[2],
+                      BufDescList[numBuffs].bufPlanes[0].width,
+                      BufDescList[numBuffs].bufPlanes[0].width*
                   (net->TIDLLayers[i].outData[j].dimValues[2] + 2*tidlMaxPad),
                   frameCount, params->preProcType);
             }
-              
+
           }
           numBuffs++;
         }
@@ -1288,7 +1307,7 @@ int32_t tidl_WriteNetOutputMem (tidl_conv2d_config *params,
   {
     printf("Could not open %s file for writing \n",params->outData);
   }
-  
+
 
   for(i = 0; i < numBuffs; i++)
   {
@@ -1296,13 +1315,27 @@ int32_t tidl_WriteNetOutputMem (tidl_conv2d_config *params,
     dataBuffParam = tidl_getDataBufDims(&createParams.net,BufDescList[i].bufferId);
 
     nuChs = dataBuffParam->dimValues[1];
-    writeDataS8(fp1,((int8_t *)BufDescList[i].bufPlanes[0].buf + 
+    #ifdef DEBUG_FLG
+    printf("[Debug Echo::test_tidl_ivison->tidl_WriteNetOutput]Calling writeDataS8(i=%d of %d)\n",i,numBuffs);
+    printf("writeDataS8(fp1,buf+%d*%d+%d,n=%d,width=%d,height=%d,pitch=%d,chOffset=%d*(%d+2*%d))\n",
+            BufDescList[i].bufPlanes[0].width,tidlMaxPad,tidlMaxPad,
+            nuChs,
+            BufDescList[i].bufPlanes[0].frameROI.width,
+            BufDescList[i].bufPlanes[0].frameROI.height,
+            BufDescList[i].bufPlanes[0].width,
+            BufDescList[i].bufPlanes[0].width,
+            BufDescList[i].bufPlanes[0].frameROI.height,
+            tidlMaxPad);
+    #endif
+    writeDataS8(fp1,((int8_t *)BufDescList[i].bufPlanes[0].buf +
                 BufDescList[i].bufPlanes[0].width*tidlMaxPad + tidlMaxPad),
                 nuChs, BufDescList[i].bufPlanes[0].frameROI.width ,
                 BufDescList[i].bufPlanes[0].frameROI.height ,
                 BufDescList[i].bufPlanes[0].width,
-                BufDescList[i].bufPlanes[0].width*
-                (BufDescList[i].bufPlanes[0].frameROI.height + 2*tidlMaxPad));
+                ((BufDescList[i].bufPlanes[0].width*
+                BufDescList[i].bufPlanes[0].height)/ nuChs));
+                // BufDescList[i].bufPlanes[0].width*
+                // (BufDescList[i].bufPlanes[0].frameROI.height + 2*tidlMaxPad));
   }
   if(fp1)
   {
@@ -1324,7 +1357,7 @@ int32_t tidl_AllocNetOutputMem(sTIDL_Network_t *net, tidl_conv2d_config *params,
     {
       for(j = 0; j < net->TIDLLayers[i].numOutBufs; j++ )
       {
-        if(tidltb_isOutDataBuff(net,net->TIDLLayers[i].outData[j].dataId, 
+        if(tidltb_isOutDataBuff(net,net->TIDLLayers[i].outData[j].dataId,
                                 TIDL_TB_CURR_LAYERS_GROUP_ID))
         {
           BufDescList[numBuffs].numPlanes                          = 1;
@@ -1334,30 +1367,34 @@ int32_t tidl_AllocNetOutputMem(sTIDL_Network_t *net, tidl_conv2d_config *params,
           uint16_t imHeight      = (uint16_t)(net->TIDLLayers[i].outData[j].dimValues[2]);
           uint16_t imWidth       = (uint16_t)(net->TIDLLayers[i].outData[j].dimValues[3]);
 
-          uint16_t outImWidth   = TIDL_BLOCK_WIDTH > imWidth ? TIDL_BLOCK_WIDTH : ALIGN_SIZE(imWidth,TIDL_BLOCK_WIDTH); 
-          uint16_t outImHeight  = TIDL_BLOCK_HEIGHT > imHeight ? TIDL_BLOCK_HEIGHT : ALIGN_SIZE(imHeight,TIDL_BLOCK_HEIGHT); 
-          
-          BufDescList[numBuffs].bufPlanes[0].width                 = 
+          uint16_t outImWidth   = TIDL_BLOCK_WIDTH > imWidth ? TIDL_BLOCK_WIDTH : ALIGN_SIZE(imWidth,TIDL_BLOCK_WIDTH);
+          uint16_t outImHeight  = TIDL_BLOCK_HEIGHT > imHeight ? TIDL_BLOCK_HEIGHT : ALIGN_SIZE(imHeight,TIDL_BLOCK_HEIGHT);
+
+          BufDescList[numBuffs].bufPlanes[0].width                 =
                   outImWidth + 2*tidlMaxPad;
-          BufDescList[numBuffs].bufPlanes[0].height                = 
+          BufDescList[numBuffs].bufPlanes[0].height                =
                   net->TIDLLayers[i].outData[j].dimValues[0]*
                   net->TIDLLayers[i].outData[j].dimValues[1]*
                   (outImHeight + 2*tidlMaxPad);
-          BufDescList[numBuffs].bufPlanes[0].frameROI.width        = 
+          BufDescList[numBuffs].bufPlanes[0].frameROI.width        =
                   net->TIDLLayers[i].outData[j].dimValues[3];
-          BufDescList[numBuffs].bufPlanes[0].frameROI.height       = 
+          BufDescList[numBuffs].bufPlanes[0].frameROI.height       =
                   net->TIDLLayers[i].outData[j].dimValues[2];
 
-          BufDescList[numBuffs].bufPlanes[0].buf = 
-              (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO, 
+          printf("Getting memory for output layer %d, OutImwidth %d, OutImHeight %d, memwidth %d, memheight %d\n",i,
+                  outImWidth, outImHeight,
+                  BufDescList[numBuffs].bufPlanes[0].width, BufDescList[numBuffs].bufPlanes[0].height);
+
+          BufDescList[numBuffs].bufPlanes[0].buf =
+              (int8_t *)TI_GetMemoryChunk(&memObj_EXTMEMNONCACHEIO,
               BufDescList[numBuffs].bufPlanes[0].width *
               BufDescList[numBuffs].bufPlanes[0].height,4);
-          BufDescList[numBuffs].reserved[0]      = 
+          BufDescList[numBuffs].reserved[0]      =
               net->TIDLLayers[i].outData[j].dataId;
-          memset( BufDescList[numBuffs].bufPlanes[0].buf,0, 
-              BufDescList[numBuffs].bufPlanes[0].width * 
+          memset( BufDescList[numBuffs].bufPlanes[0].buf,0,
+              BufDescList[numBuffs].bufPlanes[0].width *
               BufDescList[numBuffs].bufPlanes[0].height);
-          BufDescList[numBuffs].bufferId         = 
+          BufDescList[numBuffs].bufferId         =
               net->TIDLLayers[i].outData[j].dataId;
           numBuffs++;
         }
@@ -1367,33 +1404,35 @@ int32_t tidl_AllocNetOutputMem(sTIDL_Network_t *net, tidl_conv2d_config *params,
   return numBuffs;
 }
 
-int32_t tidltb_printNetInfo(sTIDL_Network_t * pTIDLNetStructure, 
+int32_t tidltb_printNetInfo(sTIDL_Network_t * pTIDLNetStructure,
                             int32_t layersGroupId)
 {
   int32_t i,j;
+  printf("LayerId,layerType,LayersGroupId,numInBufs,numOutBufs,IndataId, \t\t\t outDataId,Outdim0-3,\t\t Indim0-3\n" );
   for (i = 0 ; i < pTIDLNetStructure->numLayers; i++)
   {
-    printf("%3d, %-30s,",i, 
+    printf("%3d, %-30s,",i,
                 TIDL_LayerString[pTIDLNetStructure->TIDLLayers[i].layerType]);
-    printf("%3d, %3d ,%3d ,",pTIDLNetStructure->TIDLLayers[i].layersGroupId, 
+    printf("%3d, %3d ,%3d ,",pTIDLNetStructure->TIDLLayers[i].layersGroupId,
                              pTIDLNetStructure->TIDLLayers[i].numInBufs,
                              pTIDLNetStructure->TIDLLayers[i].numOutBufs);
-                             
-    for (j = 0; j < pTIDLNetStructure->TIDLLayers[i].numInBufs; j++) 
+
+    for (j = 0; j < pTIDLNetStructure->TIDLLayers[i].numInBufs; j++)
     {
       printf("%3d ,",pTIDLNetStructure->TIDLLayers[i].inData[j].dataId);
     }
-    for (j = (pTIDLNetStructure->TIDLLayers[i].numInBufs > 0 ? 
-          pTIDLNetStructure->TIDLLayers[i].numInBufs : 0); j < 8; j++) 
+    for (j = (pTIDLNetStructure->TIDLLayers[i].numInBufs > 0 ?
+          pTIDLNetStructure->TIDLLayers[i].numInBufs : 0); j < 8; j++)
     {
       printf("  x ,");
     }
     printf("%3d ,",pTIDLNetStructure->TIDLLayers[i].outData[0].dataId);
-    for (j = 0; j < 4; j++) 
+    for (j = 0; j < 4; j++)
     {
       printf("%5d ,",pTIDLNetStructure->TIDLLayers[i].inData[0].dimValues[j]);
     }
-    for (j = 0; j < 4; j++) 
+
+    for (j = 0; j < 4; j++)
     {
       printf("%5d ,",pTIDLNetStructure->TIDLLayers[i].outData[0].dimValues[j]);
     }
@@ -1446,7 +1485,7 @@ int32_t test_ti_dl_ivison(void)
 
   TI_CreateMemoryHandle(&memObj_DMEM0, DMEM0_SCRATCH, DMEM0_SIZE);
   TI_CreateMemoryHandle(&memObj_DMEM1, DMEM1_SCRATCH, DMEM1_SIZE);
-  TI_CreateMemoryHandle(&memObj_EXTMEMNONCACHEIO, EXTMEMNONCACHEIO, 
+  TI_CreateMemoryHandle(&memObj_EXTMEMNONCACHEIO, EXTMEMNONCACHEIO,
                          EXTMEMNONCACHEIO_SIZE);
 
 
@@ -1461,20 +1500,32 @@ int32_t test_ti_dl_ivison(void)
   createParams.l1MemSize                     = DMEM0_SIZE;
   createParams.l2MemSize                     = DMEM1_SIZE;
   createParams.l3MemSize                     = OCMC_SIZE;
- 
+
   createParams.quantHistoryParam1   = 20;
   createParams.quantHistoryParam2   = 5;
   createParams.quantMargin          = 0;
-  createParams.optimiseExtMem       = TIDL_optimiseExtMemL1; 
-  
+  createParams.optimiseExtMem       = TIDL_optimiseExtMemL1;
+  #ifdef DEBUG_FLG
+  printf("Reading network structure binary file %s\n",params->netBinFile);
+  #endif
   tidl_readNet(&createParams.net,params->netBinFile);
   createParams.net.interElementSize = 4;
   Cache_WbInvAll();
   tidl_allocNetParamsMem(&createParams.net);
+  #ifdef DEBUG_FLG
+  printf("Reading network parameter binary file %s\n",params->paramsBinFile);
+  #endif
   tidl_fillNetParamsMem(&createParams.net,params);
-  Cache_WbInvAll();
-  tidltb_printNetInfo(&createParams.net,createParams.currLayersGroupId );
 
+  Cache_WbInvAll();
+  #ifdef DEBUG_FLG
+  printf("Printing designated network info!\n");
+  #endif
+  tidltb_printNetInfo(&createParams.net,createParams.currLayersGroupId );
+  #ifdef DEBUG_FLG
+  printf("-----------------------------------------------------------------\n");
+  // printf("Debug Halt!\n");return 0;
+  #endif
 
 #if (CORE_EVE) && (!VCOP_HOST_EMULATION)
   profiler_init();
@@ -1482,10 +1533,14 @@ int32_t test_ti_dl_ivison(void)
 #endif
   numMemRec = TIDL_VISION_FXNS.ialg.algNumAlloc();
   memRec    = (IALG_MemRec *)malloc(numMemRec*sizeof(IALG_MemRec));
-
+  #ifdef DEBUG_FLG
+  printf("Checkpoint reached(1)!, nummemRec= %d\n",numMemRec);
+  #endif
   status = TIDL_VISION_FXNS.ialg.algAlloc(
     (IALG_Params *)(&createParams), NULL, memRec);
-
+    #ifdef DEBUG_FLG
+    printf("Checkpoint reached(2)!\n");
+    #endif
   if(status != IALG_EOK)
   {
     PRINT_ERRORE_MSG();
@@ -1507,10 +1562,16 @@ int32_t test_ti_dl_ivison(void)
   Intialize the algorithm instance with the allocated memory
   and user create parameters
   -----------------------------------------------------------------*/
+  #ifdef DEBUG_FLG
+  printf("Algorithm Init Begins\n");
+  #endif
   Cache_WbInvAll();
   status = TIDL_VISION_FXNS.ialg.algInit((IALG_Handle)(&handle),
     memRec,NULL,(IALG_Params *)(&createParams));
   Cache_WbInvAll();
+  #ifdef DEBUG_FLG
+  printf("Algorithm Init Done\n");
+  #endif
   handle = (IM_Fxns *) memRec[0].base;
 #if (CORE_EVE) && (!VCOP_HOST_EMULATION)
   profiler_end_print(0);
@@ -1525,9 +1586,10 @@ int32_t test_ti_dl_ivison(void)
   TEST_PRINTF("Algorithm Init Done\n");
 #endif
 
+
   inBufs.bufDesc  = inBufDescList;
   outBufs.bufDesc = outBufDescList;
-
+  printf("tidl alloc net putput mem\n" );
   inBufs.numBufs  = tidl_AllocNetInputMem(&createParams.net,params,inBufDesc);
   outBufs.numBufs = tidl_AllocNetOutputMem(&createParams.net,params,outBufDesc);
 
@@ -1543,13 +1605,22 @@ int32_t test_ti_dl_ivison(void)
   outArgs.iVisionOutArgs.size       = sizeof(TIDL_outArgs);
   inArgs.iVisionInArgs.size         = sizeof(TIDL_InArgs);
   inArgs.iVisionInArgs.subFrameInfo = 0;
-  
+
   fp1 = tidl_openNetInput(params);
-  
+  #ifdef DEBUG_FLG
+  printf("Opening input file %s\n", params->inData);
+      // printf("Debug Halt!\n");return 0;
+  #endif
   for(frameIdx = 0 ; frameIdx < params->numFrames; frameIdx++)
   {
     printf("\nProcessing Frame Number : %d \n\n",frameIdx);
     tidl_ReadNetInput(fp1, &createParams.net,params,inBufDesc,frameIdx);
+    // if(params->numFrames == 1)
+    // {
+    //   printf("checkpoint x1\n");
+    //   FCLOSE(fp1);
+    //   printf("checkpoint x0\n");
+    // }
     Cache_WbInvAll();
 #if (CORE_EVE) && (!VCOP_HOST_EMULATION)
     profiler_start();
@@ -1576,35 +1647,42 @@ int32_t test_ti_dl_ivison(void)
 
     if(params->writeOutput)
     {
-      tidl_WriteNetOutputMem(params,outBufDesc,outBufs.numBufs);  
+      #ifdef DEBUG_FLG
+      printf("Writing output file %s\n", params->outData);
+          // printf("Debug Halt!\n");return 0;
+      #endif
+      tidl_WriteNetOutputMem(params,outBufDesc,outBufs.numBufs);
     }
   }
-  FCLOSE(fp1);
-  
+  // printf("checkpoint x1\n");
+  // FCLOSE(fp1);
+  // printf("checkpoint x0\n");
   status = handle->ivision->ialg.algFree((IALG_Handle)(handle), memRec);
   if(status != IALG_EOK)
   {
     PRINT_ERRORE_MSG();
   }
-  
+  printf("checkpoint algFree\n");
   if(params->updateNetWithStats)
   {
     tidl_writeNetWithStats(params);
   }
-  
+  printf("checkpoint x\n");
   /* Here Free memory for all the mem records */
   status = TestApp_FreeMemRecords(memRec,numMemRec);
   if(status != IALG_EOK)
   {
     PRINT_ERRORE_MSG();
   }
-
+  printf("checkpoint TestApp_FreeMemRecords\n");
   /* Get the stack usage */
 #if !(HOST_EMULATION) && (!CORE_DSP) && 0
   profiler_getStackDepth();
 #endif
 EXIT_LOOP:
-
+printf("checkpoint x1\n");
+FCLOSE(fp1);
+printf("checkpoint x0\n");
   return status;
 }
 
@@ -1624,13 +1702,13 @@ int32_t main(int32_t argc, char *argv[])
   ----------------------------------------------------------------------------*/
   InitCache();
 #endif
-#ifdef USE_HOST_FILE_IO  
+#ifdef USE_HOST_FILE_IO
   ti_fileio_init();
 #endif
 #if (!HOST_EMULATION)
   argc = 1;
 #endif
-    
+
   _TSC_enable();
   params = (tidl_conv2d_config *)(&gParams);
   //report_printAppletInfo((int8_t *)"TIDL_VISION");
@@ -1658,7 +1736,7 @@ int32_t main(int32_t argc, char *argv[])
     memset(params->configLine, 0, MAX_CONFIG_LINE_SIZE);
     status = (int32_t)fgets((char *)params->configLine,MAX_CONFIG_LINE_SIZE,fp);
     LinePtr = (char *)params->configLine;
-    if ((status == EOF) || (status == 0)) 
+    if ((status == EOF) || (status == 0))
       break;
     lineNum++;
     sscanf(LinePtr, "%d",&config_cmd);
@@ -1678,7 +1756,11 @@ int32_t main(int32_t argc, char *argv[])
       status  = sscanf(LinePtr, "%s",configFileName);
       printf("\nProcessing config file %s !\n", configFileName);
       setDefaultParams(params) ;
+      //just set some default values
       status = readparamfile(configFileName, &gsTokenMap_tidl_conv2d[0]) ;
+      printf("Config Parameters has been successfully read and set into variable gParams!\n");
+      //read params from the file indicated by configFileName;
+      //the data is flowed from file to params through information stored in gsTokenMap_tidl_conv2d
       if(status == -1)
       {
         printf("Parser Failed");
@@ -1689,7 +1771,7 @@ int32_t main(int32_t argc, char *argv[])
     }
     else
     {
-      printf("Unsupported config list command parameter at line num : %4d !\n", 
+      printf("Unsupported config list command parameter at line num : %4d !\n",
               lineNum);
     }
   }
